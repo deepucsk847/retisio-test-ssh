@@ -21,7 +21,12 @@ pipeline {
             steps {
                 script {
                     def jenkinsfileEnv = readFile(env.JENKINSFILE_ENV_PATH).trim()
-                    env.envVars = readJSON text: jenkinsfileEnv
+                    def envMap = new groovy.json.JsonSlurper().parseText(jenkinsfileEnv)
+                    DOCKER_REGISTRY = envMap.DOCKER_REGISTRY ?: DOCKER_REGISTRY
+                    DOCKER_IMAGE_NAME = envMap.DOCKER_IMAGE_NAME ?: DOCKER_IMAGE_NAME
+                    DOCKER_IMAGE_TAG = envMap.DOCKER_IMAGE_TAG ?: DOCKER_IMAGE_TAG
+                    K8S_NAMESPACE = envMap.K8S_NAMESPACE ?: K8S_NAMESPACE
+                    K8S_DEPLOYMENT_NAME = envMap.K8S_DEPLOYMENT_NAME ?: K8S_DEPLOYMENT_NAME
                 }
             }
         }
