@@ -6,7 +6,7 @@ pipeline {
         stage('Read Jenkinsfile.env') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'ENV_FILE')]) {
+                    withCredentials([file(credentialsId: 'github-ssh-keycheck', variable: 'ENV_FILE')]) {
                         sh "cp $ENV_FILE Jenkinsfile.env"
                         props = readProperties file: "Jenkinsfile.env"
                     }
