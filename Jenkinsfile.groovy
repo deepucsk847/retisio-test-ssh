@@ -21,7 +21,7 @@ pipeline {
                     extensions: [[$class: 'LocalBranch', localBranch: '**']],
                     submoduleCfg: [],
                     userRemoteConfigs: [[
-                        credentialsId: 'github-ssh-keycheck',
+                        credentialsId: 'github-ssh-keycheck', // Updated credentialsId to github-ssh-keycheck
                         url: 'git@github.com:deepucsk847/retisio-test-ssh.git' // Updated GitHub repository URL
                     ]]
                 ])
