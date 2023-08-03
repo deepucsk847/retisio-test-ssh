@@ -1,26 +1,18 @@
 def props
 
-stage('Read Jenkinsfile.env') {
-    steps {
-        script {
-            withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'ENV_FILE')]) {
-                sh "cp $ENV_FILE Jenkinsfile.env"
-                props = readProperties file: "Jenkinsfile.env"
-            }
-        }
-    }
-}
-
 pipeline {
     agent any
-    environment {
-        DOCKER_REGISTRY = "${props.DOCKER_REGISTRY}"
-        DOCKER_IMAGE_NAME = "${props.DOCKER_IMAGE_NAME}"
-        DOCKER_IMAGE_TAG = "${props.DOCKER_IMAGE_TAG}"
-        K8S_NAMESPACE = "${props.K8S_NAMESPACE}"
-        K8S_DEPLOYMENT_NAME = "${props.K8S_DEPLOYMENT_NAME}"
-    }
     stages {
+        stage('Read Jenkinsfile.env') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'ENV_FILE')]) {
+                        sh "cp $ENV_FILE Jenkinsfile.env"
+                        props = readProperties file: "Jenkinsfile.env"
+                    }
+                }
+            }
+        }
         stage('Checkout') {
             steps {
                 checkout([$class: 'GitSCM',
@@ -38,8 +30,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def image = docker.build("${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}", "-f Dockerfile .")
-                    docker.withRegistry("${DOCKER_REGISTRY}", "jenkinsfile-env-credentials") {
+                    def image = docker.build("${props.DOCKER_REGISTRY}/${props.DOCKER_IMAGE_NAME}:${props.DOCKER_IMAGE_TAG}", "-f Dockerfile .")
+                    docker.withRegistry("${props.DOCKER_REGISTRY}", "jenkinsfile-env-credentials") {
                         image.push()
                     }
                 }
@@ -49,8 +41,8 @@ pipeline {
             steps {
                 script {
                     sh "kubectl config use-context minikube" // Set Minikube as the current context
-                    sh "kubectl create namespace ${K8S_NAMESPACE}" // Create namespace if it doesn't exist
-                    sh "kubectl apply -f nginx-deployment.yaml -n ${K8S_NAMESPACE}" // Deploy the Kubernetes deployment
+                    sh "kubectl create namespace ${props.K8S_NAMESPACE}" // Create namespace if it doesn't exist
+                    sh "kubectl apply -f nginx-deployment.yaml -n ${props.K8S_NAMESPACE}" // Deploy the Kubernetes deployment
                 }
             }
         }
