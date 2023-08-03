@@ -26,7 +26,7 @@ node {
         // Your build steps here
         echo "Building Docker Image..."
         // For example:
-        sh 'docker build -t ${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG} .'
+        sh "docker build -t ${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG} ."
     }
 
     stage('Deploy to Kubernetes') {
