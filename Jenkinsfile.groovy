@@ -25,7 +25,7 @@ pipeline {
 
         stage('Build Docker Image') {
             when {
-                branch 'master'
+                expression { return env.BRANCH_NAME == 'master' }
             }
             steps {
                 script {
@@ -39,7 +39,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             when {
-                branch 'master'
+                expression { return env.BRANCH_NAME == 'master' }
             }
             steps {
                 script {
