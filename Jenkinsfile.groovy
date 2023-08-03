@@ -21,7 +21,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'JENKINSFILE_ENV_PATH')]) {
-                        sh "cp \$JENKINSFILE_ENV_PATH \$ENV_FILE"
+                        sh "cp \$JENKINSFILE_ENV_PATH ."
                     }
                 }
             }
