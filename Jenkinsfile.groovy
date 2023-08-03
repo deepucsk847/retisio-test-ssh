@@ -22,11 +22,17 @@ node {
         }
     }
 
+    stage('Authenticate with Kubernetes') {
+        withCredentials([file(credentialsId: 'jenkins-kubeconfig', variable: 'KUBECONFIG')]) {
+            sh 'kubectl version' // Verify that kubectl is using the correct config
+        }
+    }
+
     stage('Build Docker Image') {
         // Your build steps here
         echo "Building Docker Image..."
         // For example:
-        sh "docker build -t ${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG} ."
+        sh 'docker build -t ${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG} .'
     }
 
     stage('Deploy to Kubernetes') {
