@@ -14,11 +14,11 @@ stage('Read Jenkinsfile.env') {
 pipeline {
     agent any
     environment {
-        DOCKER_REGISTRY = props.DOCKER_REGISTRY
-        DOCKER_IMAGE_NAME = props.DOCKER_IMAGE_NAME
-        DOCKER_IMAGE_TAG = props.DOCKER_IMAGE_TAG
-        K8S_NAMESPACE = props.K8S_NAMESPACE
-        K8S_DEPLOYMENT_NAME = props.K8S_DEPLOYMENT_NAME
+        DOCKER_REGISTRY = "${props.DOCKER_REGISTRY}"
+        DOCKER_IMAGE_NAME = "${props.DOCKER_IMAGE_NAME}"
+        DOCKER_IMAGE_TAG = "${props.DOCKER_IMAGE_TAG}"
+        K8S_NAMESPACE = "${props.K8S_NAMESPACE}"
+        K8S_DEPLOYMENT_NAME = "${props.K8S_DEPLOYMENT_NAME}"
     }
     stages {
         stage('Checkout') {
@@ -30,7 +30,7 @@ pipeline {
                     submoduleCfg: [],
                     userRemoteConfigs: [[
                         credentialsId: 'github-ssh-keycheck',
-                        url: 'https://github.com/deepucsk847/retisio-test-ssh.git'
+                        url: 'git@github.com:deepucsk847/retisio-test-ssh.git' // Updated GitHub repository URL
                     ]]
                 ])
             }
