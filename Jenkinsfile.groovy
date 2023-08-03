@@ -19,7 +19,7 @@ pipeline {
         stage('Read Jenkinsfile.env') {
             steps {
                 script {
-                    def jenkinsfileEnvPath = "Jenkinsfile.env" // Replace with the correct path
+                    def jenkinsfileEnvPath = "Jenkinsfile.env" // Replace with the correct path 
                     def jenkinsfileEnvContent = readFile(jenkinsfileEnvPath).trim()
 
                     echo "Jenkinsfile.env contents:"
