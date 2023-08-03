@@ -16,22 +16,22 @@ pipeline {
 
         stage('Read Jenkinsfile.env') {
             steps {
-                withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'JENKINSFILE_ENV_PATH')]) {
-                    def jenkinsfileEnv = readFile(JENKINSFILE_ENV_PATH).trim()
-                    envVars = readJSON text: jenkinsfileEnv
+                script {
+                    def jenkinsfileEnv = readFile(env.JENKINSFILE_ENV_PATH).trim()
+                    env.envVars = readJSON text: jenkinsfileEnv
                 }
             }
         }
 
         stage('Build Docker Image') {
             when {
-                branch 'master' // Only build the Docker image for the master branch
+                branch 'master'
             }
             steps {
                 script {
-                    docker.build("${REGISTRY_URL}/${IMAGE_NAME}:${envVars.IMAGE_TAG}")
+                    docker.build("${REGISTRY_URL}/${IMAGE_NAME}:${env.envVars.IMAGE_TAG}")
                     docker.withRegistry("${REGISTRY_URL}", 'docker-hub-credentials') {
-                        dockerImage.push("${envVars.IMAGE_TAG}")
+                        dockerImage.push("${env.envVars.IMAGE_TAG}")
                     }
                 }
             }
@@ -39,7 +39,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             when {
-                branch 'master' // Only deploy to Kubernetes for the master branch
+                branch 'master'
             }
             steps {
                 script {
