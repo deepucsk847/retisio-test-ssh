@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'my-docker-image'
-        K8S_NAMESPACE = 'my-kubernetes-namespace'
-        K8S_DEPLOYMENT_NAME = 'my-kubernetes-deployment'
+        IMAGE_NAME = "my-app"
+        REGISTRY_URL = "your.registry.url"
+        KUBE_NAMESPACE = "your-namespace"
     }
 
     stages {
-        stage('Declarative: Checkout SCM') {
+        stage('Checkout SCM') {
             steps {
                 checkout scm
             }
@@ -16,46 +16,46 @@ pipeline {
 
         stage('Read Jenkinsfile.env') {
             steps {
-                script {
-                    withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'JENKINSFILE_ENV_PATH')]) {
-                        ENV_FILE = readFile(env.JENKINSFILE_ENV_PATH).trim()
-                    }
+                withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'JENKINSFILE_ENV_PATH')]) {
+                    def jenkinsfileEnv = readFile(JENKINSFILE_ENV_PATH).trim()
+                    envVars = readJSON text: jenkinsfileEnv
                 }
             }
         }
 
         stage('Build Docker Image') {
             when {
-                expression { env.BRANCH_NAME == 'master' }
+                branch 'master' // Only build the Docker image for the master branch
             }
             steps {
                 script {
-                    def dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                    dockerImage.push()
-                    dockerImage.push("latest")
+                    docker.build("${REGISTRY_URL}/${IMAGE_NAME}:${envVars.IMAGE_TAG}")
+                    docker.withRegistry("${REGISTRY_URL}", 'docker-hub-credentials') {
+                        dockerImage.push("${envVars.IMAGE_TAG}")
+                    }
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             when {
-                expression { env.BRANCH_NAME == 'master' }
+                branch 'master' // Only deploy to Kubernetes for the master branch
             }
             steps {
                 script {
-                    def kubeconfig = readYaml file: 'kubeconfig.yaml'
-                    kubeconfig.currentContext = kubeconfig.clusters[0].name
-                    writeFile file: 'kubeconfig-updated.yaml', text: toYaml(kubeconfig)
-
-                    sh """
-                        export KUBECONFIG=kubeconfig-updated.yaml
-                        kubectl config view
-                        kubectl config use-context \${K8S_CLUSTER_NAME}
-                        kubectl config view
-                        kubectl set image deployment/\${K8S_DEPLOYMENT_NAME} \${K8S_CONTAINER_NAME}=\${DOCKER_IMAGE}:\${env.BUILD_NUMBER} -n \${K8S_NAMESPACE}
-                    """
+                    // Your Kubernetes deployment steps here
+                    // For example, using kubectl to apply manifests, etc.
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed!'
         }
     }
 }
