@@ -1,49 +1,38 @@
-def props
-
 pipeline {
     agent any
+
     stages {
-        stage('Read Jenkinsfile.env') {
+        stage('Checkout SCM') {
             steps {
-                script {
-                    withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'ENV_FILE')]) {
-                        sh "cp $ENV_FILE Jenkinsfile.env"
-                        props = readProperties file: "Jenkinsfile.env"
-                    }
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], userRemoteConfigs: [[url: 'https://github.com/deepucsk847/retisio-test-ssh.git']]])
+            }
+        }
+
+        stage('Read Jenkinsfile.env') {
+            environment {
+                ENV_FILE = 'Jenkinsfile.env'
+            }
+            steps {
+                withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'ENV_FILE')]) {
+                    sh "cp $ENV_FILE ."
                 }
             }
         }
-        stage('Checkout') {
-            steps {
-                checkout([$class: 'GitSCM',
-                    branches: [[name: '*/master']],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [[$class: 'LocalBranch', localBranch: '**']],
-                    submoduleCfg: [],
-                    userRemoteConfigs: [[
-                        credentialsId: 'github-ssh-keycheck', // Updated credentialsId to github-ssh-keycheck
-                        url: 'git@github.com:deepucsk847/retisio-test-ssh.git' // Updated GitHub repository URL
-                    ]]
-                ])
-            }
-        }
+
         stage('Build Docker Image') {
             steps {
-                script {
-                    def image = docker.build("${props.DOCKER_REGISTRY}/${props.DOCKER_IMAGE_NAME}:${props.DOCKER_IMAGE_TAG}", "-f Dockerfile .")
-                    docker.withRegistry("${props.DOCKER_REGISTRY}", "jenkinsfile-env-credentials") {
-                        image.push()
-                    }
-                }
+                // Your build Docker image steps here
+                // For example:
+                sh "docker build -t $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG ."
             }
         }
+
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    sh "kubectl config use-context minikube" // Set Minikube as the current context
-                    sh "kubectl create namespace ${props.K8S_NAMESPACE}" // Create namespace if it doesn't exist
-                    sh "kubectl apply -f nginx-deployment.yaml -n ${props.K8S_NAMESPACE}" // Deploy the Kubernetes deployment
-                }
+                // Your deploy to Kubernetes steps here
+                // For example:
+                sh "kubectl apply -f nginx-deployment.yaml -n $K8S_NAMESPACE"
+                sh "kubectl apply -f nginx-service.yaml -n $K8S_NAMESPACE"
             }
         }
     }
