@@ -2,9 +2,12 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "my-app"
-        REGISTRY_URL = "your.registry.url"
-        KUBE_NAMESPACE = "your-namespace"
+        DOCKER_REGISTRY = "localhost:5000"
+        DOCKER_IMAGE_NAME = "nginx-kubernetes"
+        DOCKER_IMAGE_TAG = "latest"
+        K8S_NAMESPACE = "nginx-namespace"
+        K8S_DEPLOYMENT_NAME = "nginx-deployment"
+        JENKINSFILE_ENV_PATH = "Jenkinsfile.env" // Replace with the correct path
     }
 
     stages {
@@ -28,11 +31,10 @@ pipeline {
                 expression { return env.BRANCH_NAME == 'master' }
             }
             steps {
-                // Your Docker build and push steps here
                 script {
-                    docker.build("${REGISTRY_URL}/${IMAGE_NAME}:${env.envVars.IMAGE_TAG}")
-                    docker.withRegistry("${REGISTRY_URL}", 'docker-hub-credentials') {
-                        dockerImage.push("${env.envVars.IMAGE_TAG}")
+                    docker.build("${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}")
+                    docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-credentials') {
+                        dockerImage.push("${DOCKER_IMAGE_TAG}")
                     }
                 }
             }
@@ -45,7 +47,7 @@ pipeline {
             steps {
                 // Your Kubernetes deployment steps here
                 // For example, using kubectl to apply manifests, etc.
-                sh 'kubectl apply -f your-kubernetes-manifest.yaml'
+                sh "kubectl apply -n ${K8S_NAMESPACE} -f your-kubernetes-manifest.yaml"
             }
         }
     }
