@@ -1,10 +1,16 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'my-docker-image'
+        K8S_NAMESPACE = 'my-kubernetes-namespace'
+        K8S_DEPLOYMENT_NAME = 'my-kubernetes-deployment'
+    }
+
     stages {
-        stage('Checkout SCM') {
+        stage('Declarative: Checkout SCM') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], userRemoteConfigs: [[url: 'https://github.com/deepucsk847/retisio-test-ssh.git']]])
+                checkout scm
             }
         }
 
@@ -13,26 +19,45 @@ pipeline {
                 ENV_FILE = 'Jenkinsfile.env'
             }
             steps {
-                withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'ENV_FILE')]) {
-                    sh "cp $ENV_FILE ."
+                script {
+                    withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'JENKINSFILE_ENV_PATH')]) {
+                        sh "cp \$JENKINSFILE_ENV_PATH \$ENV_FILE"
+                    }
                 }
             }
         }
 
         stage('Build Docker Image') {
+            when {
+                expression { env.BRANCH_NAME == 'master' }
+            }
             steps {
-                // Your build Docker image steps here
-                // For example:
-                sh "docker build -t $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG ."
+                script {
+                    def dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                    dockerImage.push()
+                    dockerImage.push("latest")
+                }
             }
         }
 
         stage('Deploy to Kubernetes') {
+            when {
+                expression { env.BRANCH_NAME == 'master' }
+            }
             steps {
-                // Your deploy to Kubernetes steps here
-                // For example:
-                sh "kubectl apply -f nginx-deployment.yaml -n $K8S_NAMESPACE"
-                sh "kubectl apply -f nginx-service.yaml -n $K8S_NAMESPACE"
+                script {
+                    def kubeconfig = readYaml file: 'kubeconfig.yaml'
+                    kubeconfig.currentContext = kubeconfig.clusters[0].name
+                    writeFile file: 'kubeconfig-updated.yaml', text: toYaml(kubeconfig)
+
+                    sh """
+                        export KUBECONFIG=kubeconfig-updated.yaml
+                        kubectl config view
+                        kubectl config use-context \${K8S_CLUSTER_NAME}
+                        kubectl config view
+                        kubectl set image deployment/\${K8S_DEPLOYMENT_NAME} \${K8S_CONTAINER_NAME}=\${DOCKER_IMAGE}:\${env.BUILD_NUMBER} -n \${K8S_NAMESPACE}
+                    """
+                }
             }
         }
     }
