@@ -33,7 +33,7 @@ node {
         // Your deployment steps here
         echo "Deploying to Kubernetes..."
         // For example:
-        sh "kubectl apply -f kubernetes/deployment.yaml --namespace=${env.K8S_NAMESPACE} --record"
+        sh "kubectl apply -f nginx-deployment.yaml --namespace=${env.K8S_NAMESPACE} --record"
     }
 
     stage('Declarative: Post Actions') {
