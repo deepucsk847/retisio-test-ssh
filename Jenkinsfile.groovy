@@ -40,11 +40,15 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            // Your build steps here
+            steps {
+                // Your build steps here
+            }
         }
 
         stage('Deploy to Kubernetes') {
-            // Your deployment steps here
+            steps {
+                // Your deployment steps here
+            }
         }
 
         stage('Declarative: Post Actions') {
