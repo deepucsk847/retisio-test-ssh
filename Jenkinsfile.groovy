@@ -4,7 +4,7 @@ node {
     }
 
     stage('Read Jenkinsfile.env') {
-        def jenkinsfileEnvPath = "path/to/Jenkinsfile.env" // Replace with the correct path
+        def jenkinsfileEnvPath = "Jenkinsfile.env" // Replace with the correct path
         def jenkinsfileEnvContent = readFile(jenkinsfileEnvPath).trim()
 
         echo "Jenkinsfile.env contents:"
