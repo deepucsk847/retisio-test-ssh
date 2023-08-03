@@ -15,9 +15,6 @@ pipeline {
         }
 
         stage('Read Jenkinsfile.env') {
-            environment {
-                ENV_FILE = 'Jenkinsfile.env'
-            }
             steps {
                 script {
                     withCredentials([file(credentialsId: 'jenkinsfile-env-credentials', variable: 'JENKINSFILE_ENV_PATH')]) {
