@@ -28,6 +28,7 @@ pipeline {
                 expression { return env.BRANCH_NAME == 'master' }
             }
             steps {
+                // Your Docker build and push steps here
                 script {
                     docker.build("${REGISTRY_URL}/${IMAGE_NAME}:${env.envVars.IMAGE_TAG}")
                     docker.withRegistry("${REGISTRY_URL}", 'docker-hub-credentials') {
@@ -42,10 +43,9 @@ pipeline {
                 expression { return env.BRANCH_NAME == 'master' }
             }
             steps {
-                script {
-                    // Your Kubernetes deployment steps here
-                    // For example, using kubectl to apply manifests, etc.
-                }
+                // Your Kubernetes deployment steps here
+                // For example, using kubectl to apply manifests, etc.
+                sh 'kubectl apply -f your-kubernetes-manifest.yaml'
             }
         }
     }
